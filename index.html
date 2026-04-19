@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+<title>Oráculo — Alfonsina Storni</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh;
+    background: linear-gradient(160deg, #001a2e 0%, #002e45 45%, #001520 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: Georgia, serif;
+    padding: 24px 16px;
+    position: relative;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  /* MAR ANIMADO */
+  .mar {
+    position: fixed;
+    bottom: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .ola {
+    position: absolute;
+    bottom: 0; left: -60%;
+    width: 220%;
+    height: 160px;
+    border-radius: 40%;
+    opacity: 0.06;
+    background: #7ecfea;
+    animation: oleaje var(--dur) ease-in-out infinite;
+    transform-origin: center bottom;
+  }
+  .ola:nth-child(1) { --dur: 7s;  bottom: 0px;   animation-delay: 0s;   height: 120px; opacity: 0.07; }
+  .ola:nth-child(2) { --dur: 10s; bottom: 10px;  animation-delay: 1s;   height: 100px; opacity: 0.05; }
+  .ola:nth-child(3) { --dur: 8s;  bottom: 20px;  animation-delay: 2.5s; height: 80px;  opacity: 0.04; }
+  .ola:nth-child(4) { --dur: 12s; bottom: 30px;  animation-delay: 0.5s; height: 140px; opacity: 0.03; }
+  .ola:nth-child(5) { --dur: 6s;  bottom: 5px;   animation-delay: 3s;   height: 90px;  opacity: 0.06; }
+
+  @keyframes oleaje {
+    0%   { transform: rotate(-2deg) translateX(0); }
+    25%  { transform: rotate(1deg)  translateX(3%); }
+    50%  { transform: rotate(-1deg) translateX(-3%); }
+    75%  { transform: rotate(2deg)  translateX(2%); }
+    100% { transform: rotate(-2deg) translateX(0); }
+  }
+
+  /* DESTELLOS */
+  .particulas { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+  .particula {
+    position: absolute;
+    border-radius: 50%;
+    background: radial-gradient(circle, #7ecfea, transparent);
+    animation: brillar var(--dur) ease-in-out infinite alternate;
+  }
+  @keyframes brillar {
+    from { opacity: 0.03; transform: scale(1); }
+    to   { opacity: 0.45; transform: scale(1.6); }
+  }
+
+  @keyframes flotar {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-9px); }
+  }
+  @keyframes aparecer {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes flipOut {
+    to { transform: rotateY(90deg); opacity: 0; }
+  }
+  @keyframes flipIn {
+    from { transform: rotateY(-90deg); opacity: 0; }
+    to   { transform: rotateY(0deg);   opacity: 1; }
+  }
+
+  .wrapper {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 340px;
+  }
+
+  header { text-align: center; margin-bottom: 30px; }
+
+  .etiqueta {
+    color: rgba(126,207,234,0.4);
+    font-size: 10px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  h1 {
+    color: #a8dff0;
+    font-size: 25px;
+    font-weight: normal;
+    letter-spacing: 0.5px;
+  }
+
+  .fecha {
+    color: rgba(126,207,234,0.3);
+    font-size: 10px;
+    letter-spacing: 3px;
+    margin-top: 6px;
+  }
+
+  .linea {
+    width: 55px; height: 1px;
+    background: rgba(126,207,234,0.25);
+    margin: 12px auto 0;
+  }
+
+  .carta {
+    width: 278px;
+    min-height: 385px;
+    border-radius: 20px;
+    border: 1.5px solid rgba(126,207,234,0.2);
+    background: linear-gradient(160deg, #001e38 0%, #003050 55%, #001828 100%);
+    box-shadow: 0 0 50px rgba(40,120,180,0.15), 0 12px 40px rgba(0,0,0,0.8);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 24px;
+    position: relative;
+    margin-bottom: 26px;
+    cursor: pointer;
+    transition: box-shadow 0.3s;
+  }
+  .carta:active {
+    box-shadow: 0 0 65px rgba(126,207,234,0.22), 0 12px 40px rgba(0,0,0,0.8);
+  }
+
+  .carta-inset {
+    position: absolute; inset: 13px;
+    border: 1px solid rgba(126,207,234,0.09);
+    border-radius: 12px;
+    pointer-events: none;
+  }
+
+  .esquina {
+    position: absolute;
+    width: 16px; height: 16px;
+    border-color: rgba(126,207,234,0.2);
+    border-style: solid;
+    pointer-events: none;
+  }
+  .esquina.tl { top:20px; left:20px;   border-width:1.5px 0 0 1.5px; }
+  .esquina.tr { top:20px; right:20px;  border-width:1.5px 1.5px 0 0; }
+  .esquina.bl { bottom:20px; left:20px;  border-width:0 0 1.5px 1.5px; }
+  .esquina.br { bottom:20px; right:20px; border-width:0 1.5px 1.5px 0; }
+
+  .simbolo-dorso {
+    font-size: 42px;
+    color: rgba(126,207,234,0.28);
+    animation: flotar 4.5s ease-in-out infinite;
+    line-height: 1;
+    margin-bottom: 18px;
+  }
+
+  .hint {
+    color: rgba(126,207,234,0.25);
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
+
+  .revelado {
+    animation: aparecer 0.5s ease forwards;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .verso {
+    color: #d6f0fa;
+    font-size: 16px;
+    line-height: 1.85;
+    text-align: center;
+    font-style: italic;
+    letter-spacing: 0.2px;
+    margin-bottom: 22px;
+  }
+
+  .separador {
+    width: 28px; height: 1px;
+    background: rgba(126,207,234,0.2);
+    margin-bottom: 15px;
+  }
+
+  .poema-titulo {
+    color: rgba(126,207,234,0.5);
+    font-size: 11px;
+    font-style: italic;
+    text-align: center;
+  }
+
+  .btn {
+    background: transparent;
+    border: 1.5px solid rgba(126,207,234,0.38);
+    color: #7ecfea;
+    padding: 12px 38px;
+    border-radius: 40px;
+    font-size: 12px;
+    font-family: Georgia, serif;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 20px;
+  }
+  .btn:active {
+    background: rgba(126,207,234,0.1);
+    border-color: rgba(126,207,234,0.75);
+    box-shadow: 0 0 22px rgba(126,207,234,0.22);
+  }
+  .btn:disabled { opacity: 0.3; }
+
+  footer {
+    position: fixed;
+    bottom: 16px;
+    color: rgba(126,207,234,0.12);
+    font-size: 9px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    z-index: 1;
+  }
+
+  .flip-out { animation: flipOut 0.28s ease forwards; }
+  .flip-in  { animation: flipIn  0.32s ease forwards; }
+</style>
+</head>
+<body>
+
+<div class="particulas" id="pts"></div>
+
+<div class="mar">
+  <div class="ola"></div>
+  <div class="ola"></div>
+  <div class="ola"></div>
+  <div class="ola"></div>
+  <div class="ola"></div>
+</div>
+
+<div class="wrapper">
+  <header>
+    <p class="etiqueta">Oráculo</p>
+    <h1>Alfonsina Storni</h1>
+    <p class="fecha">Argentina · 1892–1938</p>
+    <div class="linea"></div>
+  </header>
+
+  <div class="carta" id="carta" onclick="sacarCarta()">
+    <div class="carta-inset"></div>
+    <div class="esquina tl"></div><div class="esquina tr"></div>
+    <div class="esquina bl"></div><div class="esquina br"></div>
+    <div id="contenido">
+      <div class="simbolo-dorso">〰</div>
+      <p class="hint">Toca para consultar</p>
+    </div>
+  </div>
+
+  <button class="btn" id="btn" onclick="sacarCarta()">Sacar carta</button>
+</div>
+
+<footer>quiero morir conmigo, sola</footer>
+
+<script>
+const cartas = [
+  { v:"Tú me quieres alba,\nme quieres de espumas,\nme quieres de nácar.", t:"Tú me quieres blanca" },
+  { v:"Dios te lo diga,\nhombre pequeñito,\nque yo te amé media hora.", t:"Hombre pequeñito" },
+  { v:"Suelta a tu canario\nque quiere volar.", t:"Hombre pequeñito" },
+  { v:"Tú me dijiste: no lloró mi padre;\nno lloró mi abuelo.", t:"Peso ancestral" },
+  { v:"Fue entonces más pequeña\nla culpa que siento ahora\npor este llanto tuyo.", t:"Peso ancestral" },
+  { v:"Voy a dormir, nodriza mía,\nacuéstame.", t:"Voy a dormir" },
+  { v:"Pon una lámpara a la cabecera;\nuna constelación, la que te guste.", t:"Voy a dormir" },
+  { v:"No me despiertes si me llaman:\nsi dicen que me llaman de mañana,\ndile al sol que no insista.", t:"Voy a dormir" },
+  { v:"Pudiera ser que todo lo que en verso\nhe sentido no fuera más que aquello\nque nunca pudo ser.", t:"Bien pudiera ser" },
+  { v:"Las cosas que mueren jamás resucitan,\nlas cosas que mueren no vuelven jamás.", t:"Bien pudiera ser" },
+  { v:"Yo soy la loba.\nMe separé de la manada\ny me fui a la montaña.", t:"La loba" },
+  { v:"Trepé la montaña\ny en la cima olvidé\npor qué había subido.", t:"La loba" },
+  { v:"Me cansé de ser mansa\ny dulce como el agua\nque no sabe de mar.", t:"La loba" },
+  { v:"Veinte siglos de raza\nme oprimen en los hombros\ncomo una losa fría.", t:"Veinte siglos" },
+  { v:"Siglo XX, cabalgata\nde humo y de acero.", t:"Siglo XX" },
+  { v:"Yo no sé si me quieres\no si no me quieres;\npero sé que te quiero.", t:"Una voz" },
+  { v:"Del mar la sal y el frío\nme han dado pecho firme\ny alma aventurera.", t:"El mar" },
+  { v:"El mar, el mar, el mar,\npor qué viniste a mí,\nsi yo no te llamé.", t:"Capricho" },
+  { v:"La caricia que nunca\nme diste, la guardo\ncomo una herida abierta.", t:"La caricia perdida" },
+  { v:"Me has dado un dulce daño\ntan dulce que aún me duele\ncomo si fuera ayer.", t:"El dulce daño" },
+  { v:"Fiera de amor soy,\ntriste fiera acorralada\nque no halla salida.", t:"Fiera de amor" },
+  { v:"Quiero morir conmigo,\nsola, sin ti,\nsin este amor que nos ata.", t:"Poema para mi muerte" },
+  { v:"En el insomnio del alba\ncuento las horas perdidas\ny ninguna me alcanza.", t:"Insomnio" },
+  { v:"Las calles de la ciudad\nme devuelven mi sombra\ncomo un espejo hostil.", t:"Lo que pasa en la calle" },
+  { v:"Aquí nació mi verso,\naquí donde el dolor\naprendió a tener nombre.", t:"Cuadrados y ángulos" },
+  { v:"Casas enfiladas,\ncasas enfiladas,\ngente con ojos fijos en lo útil.", t:"Cuadrados y ángulos" },
+  { v:"Mis manos son de tierra,\npero tocan el cielo\ncada vez que escribo.", t:"El ruego" },
+  { v:"Te pido, amor, tan solo\nque me dejes ser pájaro\nuna vez siquiera.", t:"El ruego" },
+  { v:"No te pido que me ames,\nte pido tan solo\nque no me hagas daño.", t:"El ruego" },
+  { v:"Golondrina del frío,\n¿dónde escondes el nido\ncuando el invierno llega?", t:"Golondrinas" },
+  { v:"El mundo tiene un muro\ny yo lo he recorrido\nbuscando una ventana.", t:"El mundo" },
+  { v:"Nací de una mujer\nque supo callar todo\nlo que yo grito ahora.", t:"Palabras a mi madre" },
+  { v:"Madre: en tu vientre oscuro\naprendí a tener miedo\nantes de tener nombre.", t:"Palabras a mi madre" },
+  { v:"Ser mujer es llevar\nun país conquistado\ndentro del propio cuerpo.", t:"La que comprende" },
+  { v:"La que comprende todo\ncalla, dobla la frente\ny se pone a llorar.", t:"La que comprende" },
+  { v:"Tengo miedo del mar\nporque el mar sabe todo\nlo que yo no me atrevo.", t:"Miedo" },
+  { v:"El amor es una llaga\nque duele más despacio\ncuanto más se la toca.", t:"Queja" },
+  { v:"Me duele esta pobreza\nde no poder darte\nmás que palabras.", t:"Queja" },
+  { v:"Soy mujer: en este hecho,\nsin más, caben\nlas palabras de un siglo.", t:"Soy mujer" },
+  { v:"Esta noche me invaden\nrecuerdos que no tengo,\npenas que no viví.", t:"Epitafio para mi tumba" },
+  { v:"Cuando me muera, escribid\ntan solo: amó, fue amada,\nel mar la consoló.", t:"Epitafio para mi tumba" },
+  { v:"Antifaz de otro tiempo,\nrostro que no es el mío,\n¿quién me inventó?", t:"Antifaz" },
+  { v:"El hijo que no tuve\nllora en algún poema\nsin que yo lo sepa.", t:"El hijo" },
+  { v:"Me busco entre mis versos\ny encuentro solamente\nla sombra de quien fui.", t:"Mundo de siete pozos" },
+  { v:"El mundo es redondo\ny en su borde exacto\nme detuve a caer.", t:"Mundo de siete pozos" },
+  { v:"Siete veces nací\ny siete veces el mismo hombre\nno supo reconocerme.", t:"Mundo de siete pozos" },
+  { v:"Lávate en agua de roca,\nduerme sobre escarcha,\nbebe el rocío y no el vino.", t:"Tú me quieres blanca" },
+  { v:"Huye hacia los bosques,\nmójate en el rocío\ny vuelve blanco.", t:"Tú me quieres blanca" },
+  { v:"Soy ese pez extraño\nque vive en el aire\ny sueña con el fondo.", t:"El pez" },
+  { v:"Construí mi casa\ncon palabras ajenas\ny me quedé sin techo.", t:"La casa" },
+];
+
+let animando = false;
+
+const pts = document.getElementById('pts');
+for (let i = 0; i < 38; i++) {
+  const s = document.createElement('div');
+  s.className = 'particula';
+  const sz = Math.random() * 3 + 1;
+  s.style.cssText = `top:${Math.random()*100}%;left:${Math.random()*100}%;
+    width:${sz}px;height:${sz}px;
+    --dur:${2.5+Math.random()*4}s;
+    animation-delay:${Math.random()*5}s;`;
+  pts.appendChild(s);
+}
+
+function sacarCarta() {
+  if (animando) return;
+  animando = true;
+  const cont = document.getElementById('contenido');
+  const btn  = document.getElementById('btn');
+  btn.disabled = true;
+  cont.classList.add('flip-out');
+
+  setTimeout(() => {
+    const idx = Math.floor(Math.random() * cartas.length);
+    const c = cartas[idx];
+    const versoHtml = c.v.replace(/\n/g, '<br>');
+    cont.classList.remove('flip-out');
+    cont.innerHTML = `
+      <div class="revelado">
+        <p class="verso">${versoHtml}</p>
+        <div class="separador"></div>
+        <p class="poema-titulo">${c.t}</p>
+      </div>`;
+    cont.classList.add('flip-in');
+
+    setTimeout(() => {
+      cont.classList.remove('flip-in');
+      btn.disabled = false;
+      animando = false;
+    }, 380);
+  }, 300);
+}
+</script>
+</body>
+</html>
